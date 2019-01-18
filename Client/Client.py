@@ -1,25 +1,61 @@
 import socket
+import sys
+import time
 
-# Create a client socket
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+OK=0
+ERROR=-1
+NUMARGS=3
 
-# connect to a server
-ip=socket.gethostbyname("www.google.com")
+def create_endpoint():
+    client = socket.socket()
+    return client
 
-print("IP address of www.google.com is:", ip)
+def main():
+    if len(sys.argv) != NUMARGS:
+        print("Usage: client <serverIP> <port>")
+        input()
+        return ERROR
 
-port=80
+    try:
+        client = create_endpoint()
 
-# Bind the IP address and the port into a tuple
-address=(ip,port)
+        try:
+            server=sys.argv[1]
+            port=int(sys.argv[2])
 
-client.connect(address)
+            print("[*] C: Waiting for the server to initialize...")
 
-bytes = client.send(b"GET / HTTP/1.1\r\nHost: google.com\r\n\r\n")
+            time.sleep(3)
 
-print("{} bytes have been sent to www.google.com".format(bytes))
+            print("[*] C: Attempting to connect to the server", server, " on port", port, "...")
 
-data = client.recv(1024)
-print(data)
-input()
+            client.connect((server, port))
 
+            print("[*] C: Connected to the server", server, " on port", port, ".")
+            print()
+            print("Type the text you want to send to the server at the prompt.")
+
+            while True:
+                text=input("> ")
+                if text=='':
+                    continue
+                client.sendall(text.encode())
+                if text.upper()=='QUIT':
+                    print("[*] S: <disconnected>")
+                    break
+                received=client.recv(len(text))
+                print("[*] S:", received.decode())
+        except:
+            print("A problem occurred while communicating with the server.")
+            return ERROR
+        finally:
+            client.close()
+
+    except:
+        print("A problem occurred while communicating with the server.")
+        return ERROR
+
+    return OK
+
+if __name__ == "__main__":
+    main()

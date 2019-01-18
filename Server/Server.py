@@ -1,54 +1,71 @@
 # This code was typed out referencing a YouTube tutorial
 
+import os
+import sys
 import socket
 
-print("[*] S: Creating new TCP endpoint...")
+OK=0
+ERROR=-1
 
-# create a server socket
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def main():
+    # Get the port to listen on from the command line arguments
+    if len(sys.argv) < 2:
+        print("Usage: server.py <port> where <port> is between 1024-49151 exclusive.")
+        print("Done.")
+        return ERROR
 
-print("[*] S: Getting local machine IP address...")
+    print("[*] S: Creating new TCP endpoint...")
 
-# Get the IP address of the server
-ip = socket.gethostbyname(socket.gethostname())
+    # create a server socket
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# port (user-defined)
-port = 9000
+    print("[*] S: Getting local machine IP address...")
 
-print("[*] S: Configured to listen on port", port)
+    # Get the IP address of the server
+    ip = socket.gethostbyname(socket.gethostname())
 
-address = (ip,port)
+    # port (user-defined)
+    port = 9000
 
-print("[*] S: Binding TCP endpoint to", ip, " on port", port, "...")
+    print("[*] S: Configured to listen on port", port)
 
-server.bind(address)
+    address = (ip,port)
 
-server.listen(128)
+    print("[*] S: Binding TCP endpoint to", ip, " on port", port, "...")
 
-print("[*] S: Started listening on ", ip, "and", port, "...")
+    server.bind(address)
 
-client, addr = server.accept()
+    server.listen(128)
 
-print("[*] S: Got a connection from ", addr[0], "on port", addr[1])
+    print("[*] S: Started listening on IP address", ip, "and port", port, "...")
 
-while True:
-    data = client.recv(1024)
-    print("[*] C:", data)
+    client, addr = server.accept()
 
-    print("[*] S: Processing the data...")
-    if(data=="QUIT"):
-        client.send("Goodbye!")
-        print("[*] S: Goodbye!")
-        print("[*] S: <disconnected>")
-        client.close()
-        break
-    else:
-        # Echo the data back
-        print("[*] S:", data)
-        client.send(data)
+    print("[*] S: Got a connection from IP address", addr[0], "on port", addr[1])
 
-print("[*] S: Closing endpoint...")
+    while True:
+        try:
+            data = client.recv(1024)
+            print("[*] C:", data.decode())
+            if(data==b'QUIT'):
+                client.send("Goodbye!")
+                print("[*] S: Goodbye!")
+                print("[*] S: <disconnected>")
+                client.close()
+                break
+            elif len(data)>0:
+                # Echo the data back
+                print("[*] S:", data)
+                client.send(data)
+        except:
+            break
+        
+    print("[*] S: Closing endpoint...")
 
-server.close()
+    server.close()
 
-print("[*] S: done.")
+    print("[*] S: done.")
+    return OK
+
+if __name__ == "__main__":
+    main()
